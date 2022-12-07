@@ -1,0 +1,24 @@
+<!--This is the page which lets users add a food item to the Database-->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Add a food item to <a href="/"><%=shopName%></a></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1><a href="/"><%=shopName%></a>: Add Food Item</h1>
+        <!-- The form to add a new food, and it's everything with it -->
+        <form method="POST" action="/food-added">
+            <label for="name">Name:</label><input id="name" type="text" name="name" required /><br><br>
+            <label for="price">Typical Values per:</label><input id="price" type="number" name="price" step="any" required /><br><br>
+            <label for="unit">Unit of the typical value:</label><input id="unit" type="text" name="unit" step="any" placeholder="gram, litre, tablespoon, etc" required /><br><br>
+            <label for="carbs">Carbs:</label><input id="carbs" type="number" name="carbs" step="any" required /><br><br>
+            <label for="fat">Fat:</label><input id="fat" type="number" name="fat" step="any" required /><br><br>
+            <label for="protein">Protein:</label><input id="protein" type="number" step="any" name="protein" required /><br><br>
+            <label for="salt">Salt:</label><input id="salt" type="number" step="any" name="salt" required /><br><br>
+            <label for="sugar">Sugar:</label><input id="sugar" type="number" step="any" name="sugar" required /><br><br>
+            <input type="submit" value="Add Food" />
+        </form>
+    </body>
+</html>

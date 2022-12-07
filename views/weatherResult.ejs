@@ -1,0 +1,29 @@
+<!-- The page which gets the weather result -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Weather for <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1><a href="/"><%=shopName%></a> Shop</h1>
+        <form action="/weather-result" METHOD="GET">
+            <h2><label for="search-box">What city's weather do you want to search for?</label></h2>
+            <label for="keyword"></label><input id="keyword" type="text" name="keyword" placeholder="Search the Weather">
+            <input type="submit" value="Search" >
+        </form>
+        <h3>The weather in <%=theWeather.name%> is: </h3>
+        <img src="http://openweathermap.org/img/wn/<%=theWeather.weather[0].icon%>.png" alt="Weather Icon">
+        <p>Current Temperature: <%=theWeather.main.temp%></p>
+        <p>Feels Like: <%=theWeather.main.feels_like%></p>
+        <p>Description: <%=theWeather.weather[0].description%></p>
+        <p>Minimum Temperature: <%=theWeather.main.temp_min%></p>
+        <p>Maximum Temperature: <%=theWeather.main.temp_max%></p>
+        <p>Pressure: <%=theWeather.main.pressure%></p>
+        <p>Humidity: <%=theWeather.main.humidity%></p>
+        <p>Visibility: <%=theWeather.visibility%></p>
+        <p>Wind Speed: <%=theWeather.wind.speed%></p>
+        <p>Clouds: <%=theWeather.clouds.all%></p>
+    </body>
+</html>

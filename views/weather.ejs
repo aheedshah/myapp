@@ -1,0 +1,17 @@
+<!-- The page which gets the weather form -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Weather for <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1><a href="/"><%=shopName%></a> Shop</h1>
+        <form action="/weather-result" METHOD="GET">
+            <h2><label for="search-box">What city's weather do you want to search for?</label></h2>
+            <label for="keyword"></label><input id="keyword" type="text" name="keyword" placeholder="Search the Weather">
+            <input type="submit" value="Search" >
+        </form>
+    </body>
+</html>

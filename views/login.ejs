@@ -1,0 +1,18 @@
+<!--The login page for our application -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Login for <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1>Login for <a href="/"><%=shopName%></a></h1>
+        <!-- Login form which takes the username and password for the user to login -->
+        <form action="/loggedIn" method="POST">
+            <label for="username">Username: </label><input id="username" type="text" name="username" placeholder="Username" required /> <br /><br />
+            <label for="password">Password: <input id="password" type="password" name="password" placeholder="Password" required /></label> <br /><br />
+            <input type="submit" value="Login" />
+        </form>
+    </body>
+</html>

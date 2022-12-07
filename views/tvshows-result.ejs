@@ -1,0 +1,21 @@
+<!-- The page which gets the TV Show result -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>TV Shows for <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1><a href="/"><%=shopName%></a> Shop</h1>
+        <%for(let i = 0; i<theData.length; i++) {%>
+            <h2>Show name: <%=theData[i].show.name%></h2>
+            <p>Type: <%=theData[i].show.type%></p>
+            <p>Genre: <%=theData[i].show.genres%></p>
+            <p>Url: <a href="<%=theData[i].show.url%>" target="_blank"><%=theData[i].show.url%></a></p>
+            <p>Language: <%=theData[i].show.language%></p>
+            <p>Status: <%=theData[i].show.status%></p>
+            <p>Score: <%=theData[i].score%></p>
+        <%}%>
+    </body>
+</html>

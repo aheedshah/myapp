@@ -1,0 +1,18 @@
+<!-- This is the page for deleting a user from the db -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Delete your account for <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1>Delete your account for <a href="/"><%=shopName%></a></h1>
+        <h2>Please enter the username you would like to delete</h2>
+        <!-- The form which deletes the username put into the form -->
+        <form action="/deleteAccount" method="POST">
+            <label for="username">Username: </label><input id="username" type="text" name="username" placeholder="Username" required /> <br /><br />
+            <input type="submit" value="Delete your account" />
+        </form>
+    </body>
+</html>

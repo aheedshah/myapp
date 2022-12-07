@@ -1,0 +1,21 @@
+<!-- The register page for our web app which lets users register for this web app -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Register for <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1>Register for <a href="/"><%=shopName%></a></h1>
+        <!-- The form that lets users register for this web app. These details are then sent to the db -->
+        <form method="POST" action="/registered">
+            <label for="first">First name: <input id="first" type="text" name="first" placeholder="First Name" required /></label> <br />
+            <label for="last">Last name: <input id="last" type="text" name="last" placeholder="Last Name" /></label> <br />
+            <label for="email">Email: <input id="email" type="email" name="email" placeholder="Email Address" required /></label> <br />
+            <label for="username">Username: <input id="username" type="text" name="username" placeholder="Username" required /></label> <br />
+            <label for="password">Password: <input id="password" type="password" name="password" placeholder="Password" required /></label> <br />
+            <input type="submit" value="Register" />
+        </form>
+    </body>
+</html>

@@ -1,0 +1,17 @@
+<!-- The page which gets the API from TV Maze -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Look for Shows in <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1><a href="/"><%=shopName%></a> Shop</h1>
+        <form action="/show-search" METHOD="GET">
+            <h2><label for="search-box">What TV Show would you like to search for?</label></h2>
+            <label for="keyword"></label><input id="keyword" type="text" name="keyword" placeholder="Search for a show">
+            <input type="submit" value="Search" >
+        </form>
+    </body>
+</html>

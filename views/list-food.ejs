@@ -1,0 +1,54 @@
+<!-- The page which list all the food in our database -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Welcome to <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+        <style>
+            table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            td, th {
+                border: 1px solid #dddddd;
+                text-align: left;
+                padding: 8px;
+            }
+
+            tr:nth-child(even) {
+                background-color: #dddddd;
+            }
+        </style>
+    </head>
+    <body>
+        <h1><a href="/"><%=shopName%></a> Shop</h1>
+        <h2>The food currently in our database are:</h2>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+                <th>Unit</th>
+                <th>Carbs</th>
+                <th>Fat</th>
+                <th>Protein</th>
+                <th>Salt</th>
+                <th>Sugar</th>
+            </tr>
+            <% availableFood.forEach(function(food) { %>
+                <tr>
+                    <th><%=food.name%></th>
+                    <th><%=food.value%></th>
+                    <th><%=food.unit%></th>
+                    <th><%=food.carbs%></th>
+                    <th><%=food.fat%></th>
+                    <th><%=food.protein%></th>
+                    <th><%=food.salt%></th>
+                    <th><%=food.sugar%></th>
+                </tr>
+            <% }) %>
+        </table>
+    </body>
+</html>

@@ -1,0 +1,16 @@
+<!--This is the page which renders when a user has registered with us-->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Yay! You are registered for <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1>Congrats <%=registeredUser[0]%> <%=registeredUser[1]%>! You are registered for <a href="/"><%=shopName%></a></h1>
+        <p>We'll email you on <%=registeredUser[2]%>. Your username is <%=registeredUser[3]%> and your password is <%=registeredUser[5]%>.
+            Also, your hashed password is <%=registeredUser[4]%>.
+        </p>
+    </body>
+</html>
+

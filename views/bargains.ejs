@@ -1,0 +1,19 @@
+<!--The page which shows the bargain books which are the books whose price is lesser than 20 pounds -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Welcome to <a href="/"><%=shopName%></a></title>
+    <!-- Linking my CSS -->
+    <link rel="stylesheet"  type="text/css" href="main.css" />
+  </head>
+  <body>
+    <h1><a href="/"><%=shopName%></a> Shop</h1>
+    <h2>Here are our bargain books:</h2>
+    <ul>
+      <!-- availableBooks variable comes from main.js which gets the requested books -->
+      <% availableBooks.forEach(function(book) { %>
+        <li><%= book.name %>, &#163;<%=book.price%> </li>
+      <% }) %>
+    </ul>
+  </body>
+</html>

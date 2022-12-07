@@ -1,0 +1,18 @@
+<!-- The page which lets users search for a food -->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Search <%=shopName%></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1>Search a food for <a href="/"><%=shopName%></a></h1>
+        <!-- The form which lets users search for a book -->
+        <form action="/search-result" method="GET">
+            <label for="search-box">What food are you looking for?</label><br />
+            <input id="keyword" type="text" name="keyword" placeholder="Search for food">
+            <input type="submit" value="Search" >
+        </form>
+    </body>
+</html>
