@@ -26,8 +26,11 @@
     <body>
         <h1><a href="/"><%=shopName%></a> Shop</h1>
         <h2>The food currently in our database are:</h2>
-        <table>
+
+        <table id = "myTable">
             <tr>
+                <th>Select</th>
+                <th>Quantity</th>
                 <th>Name</th>
                 <th>Value</th>
                 <th>Unit</th>
@@ -39,16 +42,76 @@
             </tr>
             <% availableFood.forEach(function(food) { %>
                 <tr>
-                    <th><%=food.name%></th>
-                    <th><%=food.value%></th>
-                    <th><%=food.unit%></th>
-                    <th><%=food.carbs%></th>
-                    <th><%=food.fat%></th>
-                    <th><%=food.protein%></th>
-                    <th><%=food.salt%></th>
-                    <th><%=food.sugar%></th>
+                    <td><input type="checkbox" id="select" name="select" onchange="showNumber()"></td>
+                    <td><input type="number" id="ola" name="quantity" required disabled min="0"></td>
+                    <td><%=food.name%></td>
+                    <td><%=food.value%></td>
+                    <td><%=food.unit%></td>
+                    <td class="carbs"><%=food.carbs%></td>
+                    <td class="fats"><%=food.fat%></td>
+                    <td class="protein"><%=food.protein%></td>
+                    <td class="salt"><%=food.salt%></td>
+                    <td class="sugar"><%=food.sugar%></td>
                 </tr>
             <% }) %>
+            <tr>
+                <td>Total</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td id="carbsTotal"></td>
+                <td id="fatsTotal"></td>
+                <td id="proteinTotal"></td>
+                <td id="saltTotal"></td>
+                <td id="sugarTotal"></td>
+            </tr>
         </table>
+        <button type="submit" onclick="calculate()">Get the Nutritional Information</button>
+
     </body>
+    <script>
+        function showNumber() {
+            for(let i = 0; i<document.getElementsByName("select").length; i++) {
+                if(document.getElementsByName("select").item(i).checked){
+                    document.getElementsByName("quantity").item(i).disabled = false;
+                } else {
+                    document.getElementsByName("quantity").item(i).disabled = true;
+                    document.getElementsByName("quantity").item(i).value = "";
+                }
+            }
+        }
+        function calculate() {
+            document.querySelectorAll('input').forEach(e => e.reportValidity()); //This validates the form inputs
+            let carbs = document.getElementsByClassName("carbs"); //Getting the elements of all carbs in the table
+            let fats = document.getElementsByClassName("fats");//Getting the elements of all fats in the table
+            let protein = document.getElementsByClassName("protein");//Getting the elements of protein in the table
+            let salt = document.getElementsByClassName("salt");//Getting the elements of all salt in the table
+            let sugar = document.getElementsByClassName("sugar");//Getting the elements of all sugar in the table
+            //Declaring vars to store sums of each nutritional element
+            let sumOfCarbs = 0;
+            let sumOfFats = 0;
+            let sumOfProtein = 0;
+            let sumOfSalt = 0;
+            let sumOfSugar = 0;
+
+            //for each value in the table
+            for(let i = 0; i<carbs.length; i++) {
+                if(document.getElementsByName("select").item(i).checked) {
+                    //we add the value of each nutrition to the variables multiplied by the quantity
+                    sumOfCarbs+=(Number(carbs.item(i).innerHTML) * Number(document.getElementsByName("quantity").item(i).value));
+                    sumOfFats+=(Number(fats.item(i).innerHTML) * Number(document.getElementsByName("quantity").item(i).value));
+                    sumOfProtein+=(Number(protein.item(i).innerHTML) * Number(document.getElementsByName("quantity").item(i).value));
+                    sumOfSalt+=(Number(salt.item(i).innerHTML) * Number(document.getElementsByName("quantity").item(i).value));
+                    sumOfSugar+=(Number(sugar.item(i).innerHTML) * Number(document.getElementsByName("quantity").item(i).value));
+                }
+            }
+            //Then, we put these values in the total information
+            document.getElementById("carbsTotal").innerHTML = sumOfCarbs.toFixed(2);
+            document.getElementById("fatsTotal").innerHTML = sumOfFats.toFixed(2);
+            document.getElementById("proteinTotal").innerHTML = sumOfProtein.toFixed(2);
+            document.getElementById("saltTotal").innerHTML = sumOfSalt.toFixed(2);
+            document.getElementById("sugarTotal").innerHTML = sumOfSugar.toFixed(2);
+        }
+    </script>
 </html>

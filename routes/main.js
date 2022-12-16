@@ -1,19 +1,19 @@
 //requiring bcrypt for my password encryption
 const bcrypt = require("bcrypt");
-const { check, validationResult } = require('express-validator');
+const { check, validationResult, body} = require('express-validator');
 const request = require("request");
 
 module.exports = (app, shopData) => {
     const redirectLogin = (req, res, next) => {
-        if (!req.session.userId ) {
-            res.redirect('./login')
+        if (!req.session.userId) {
+            res.redirect('./login');
         } else {
             next();
         }
     }
     // Handle our routes
     //Our Home Page Route
-    app.get('/',function(req,res) {
+    app.get('/', function (req, res) {
         res.render('index.ejs', shopData);
     });
 
@@ -27,11 +27,17 @@ module.exports = (app, shopData) => {
         res.render('register.ejs', shopData);
     });
 
-    //From handler for register form
-    app.post('/registered', [check('email').isEmail(), check('password').isLength({min: 8})], (req,res) => {
+    /**
+     * Form handler for register form
+     * Register Form doesn't allow users to register unless their password is at least 8 characters and all the fields
+     * have been entered correctly.
+     * It also stores a hashed password to the db so that the passwords in our db are secure and sanitising all the fields
+     * so they are safe from XSS attacks
+     */
+    app.post('/registered', [check('email').isEmail(), check('password').isLength({min: 8})], (req, res) => {
         //checking if the email is an email and the password has a length of at least 8 characters
         const errors = validationResult(req);
-        if(!errors.isEmpty()) {
+        if (!errors.isEmpty()) {
             res.redirect('./register');
         } else {
             //The cost factor controls how much time is needed to calculate a single bcrypt hash
@@ -39,7 +45,7 @@ module.exports = (app, shopData) => {
             //Sanitising the password the user enters
             const plainPassword = req.sanitize(req.body.password);
             //hashing the password
-            bcrypt.hash(plainPassword, saltRounds, function(err, hashedPassword) {
+            bcrypt.hash(plainPassword, saltRounds, function (err, hashedPassword) {
                 // Storing hashed password in the database.
                 let sqlQuery = "INSERT INTO userDetails (first, last, email, username, password) VALUES (?,?,?,?,?)";
 
@@ -53,25 +59,29 @@ module.exports = (app, shopData) => {
                         return console.error(err.message);
                     }
                     //rendering this to the registered page
-                    let newData = Object.assign({}, shopData, {registeredUser:newUser});
+                    let newData = Object.assign({}, shopData, {registeredUser: newUser});
                     res.render("registered.ejs", newData);
                 });
             });
         }
     });
 
-    //Login page handlers
-    app.get('/login', (req,res) => {
+    //Rendering login page
+    app.get('/login', (req, res) => {
         //renders login page
         res.render('login.ejs', shopData);
     });
 
-    //Login page form handler
+    /**
+     * Form handler for login page
+     * The login page uses compare from bcrypt to check if the password entered matches the hashed password.
+     * It also sanitises all fields to protect from XSS Attacks.
+     * */
     app.post('/loggedIn', (req, res) => {
         //Password the user enters
         const plainPassword = req.sanitize(req.body.password);
         //SQL Query to get the hashed password from the database
-        let sqlQuery = "SELECT password FROM userDetails WHERE username='"+req.sanitize(req.body.username)+"'";
+        let sqlQuery = "SELECT password FROM userDetails WHERE username='" + req.sanitize(req.body.username) + "'";
 
         //Querying the db
         db.query(sqlQuery, (err, result) => {
@@ -100,12 +110,12 @@ module.exports = (app, shopData) => {
     });
 
     //Logout Page Handler
-    app.get('/logout', redirectLogin, (req,res) => {
+    app.get('/logout', redirectLogin, (req, res) => {
         req.session.destroy(err => {
             if (err) {
-                return res.redirect('./')
+                return res.redirect('./');
             }
-            res.send('You have been logged out. <a href='+'./'+'>Home</a>');
+            res.send('You have been logged out. <a href=' + './' + '>Home</a>');
         });
     });
 
@@ -114,48 +124,60 @@ module.exports = (app, shopData) => {
         res.render('add-food.ejs', shopData);
     });
 
-    //Form handler to add food
+    /***
+     * Form handler to add food
+     * This form handler adds food to our database including the user who added the food. It also sanitises each field
+     * to protect from XSS Attacks
+     */
     app.post('/food-added', (req, res) => {
-        const username = req.session.userId;
+        const username = req.session.userId; //getting the username to add it to the db
+        //the sql query
         let sqlQuery = "INSERT INTO food(username, name, value, unit, carbs, fat, protein, salt, sugar) VALUES (?,?,?,?,?,?,?,?,?)";
+        //Array of new things to populate the db with
         let newFood = [username, req.sanitize(req.body.name), req.sanitize(req.body.price), req.sanitize(req.body.unit),
             req.sanitize(req.body.carbs), req.sanitize(req.body.fat), req.sanitize(req.body.protein), req.sanitize(req.body.salt),
             req.sanitize(req.body.sugar)];
 
-        //adding the user in our database
+        //adding the food in our database
         db.query(sqlQuery, newFood, (err, result) => {
             if (err) {
                 return console.error(err.message);
             }
-            //rendering this to the registered page
-            let newData = Object.assign({}, shopData, {foodAdded:newFood});
+            //rendering this to show details of the food added
+            let newData = Object.assign({}, shopData, {foodAdded: newFood});
             res.render("food-added.ejs", newData);
         });
     });
 
+    //Rendering the search food page
     app.get('/search-food', (req, res) => {
-       res.render('search-food.ejs', shopData);
+        res.render('search-food.ejs', shopData);
     });
 
+    /***
+     * Form handler to render search result of food
+     * This checks if keyword is empty. If it is, it redirects to the previous page
+     * This also sanitises the keyword which is being searched
+     */
     app.get('/search-result', [check('keyword').notEmpty()], (req, res) => {
         //Checking to see that the keyword is not empty
         const errors = validationResult(req);
-        if(!errors.isEmpty()) {
+        if (!errors.isEmpty()) {
             res.redirect('./search-food');
         } else {
             //searching in the database
-            let sqlQuery = "SELECT * FROM food WHERE name LIKE '%" + req.query["keyword"] + "%'"; // query database to get all the books
+            let sqlQuery = "SELECT * FROM food WHERE name LIKE '%" + req.sanitize(req.query["keyword"]) + "%'"; // query database to get all the books
             // execute sql query
             db.query(sqlQuery, (err, result) => {
                 if (err) {
                     res.redirect('./');
                 }
                 //If there are no matching food found, send this to the page
-                if(result[0] === undefined) {
-                    res.send('No matching food has been found. Click <a href='+'/search-food'+'>here</a> to go back to the search page or <a href='+'./'+'>here</a> to go back to the home page.');
+                if (result[0] === undefined) {
+                    res.send('No matching food has been found. Click <a href=' + '/search-food' + '>here</a> to go back to the search page or <a href=' + './' + '>here</a> to go back to the home page.');
                 } else {
                     //get the available food from the db
-                    let newData = Object.assign({}, shopData, {availableFood:result});
+                    let newData = Object.assign({}, shopData, {availableFood: result});
                     //and render the page with that data
                     res.render("list-food.ejs", newData);
                 }
@@ -163,6 +185,135 @@ module.exports = (app, shopData) => {
         }
     });
 
+    //Rendering the update food search page. This also redirects to login page if user hasn't logged in
+    app.get('/search-food-to-update', redirectLogin, (req, res) => {
+        res.render('search-food-to-update.ejs', shopData);
+    });
+
+    /**
+     * Form handler to show table of food of search keyword.
+     * This redirects to login page if user has not logged in and also checks to see whether the keyword is empty.
+     * It also sanitises keyword to protect from XSS Attacks
+     */
+    app.get('/food-to-update', redirectLogin, [check('keyword').notEmpty()], (req, res) => {
+        //Checking to see that the keyword is not empty
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            res.redirect('./search-food-to-update');
+        } else {
+            //searching in the database
+            let sqlQuery = "SELECT * FROM food WHERE name LIKE '%" + req.sanitize(req.query["keyword"]) + "%'"; // query database to get all the books
+            // execute sql query
+            db.query(sqlQuery, (err, result) => {
+                if (err) {
+                    res.redirect('./');
+                } else if (result[0] === undefined) { //If there are no matching food found, send this to the page
+                    res.send('No matching food has been found. Click <a href=' + '/search-food-to-update' + '>here</a> to go back to the search page or <a href=' + './' + '>here</a> to go back to the home page.');
+                } else {
+                    //get the available food from the db
+                    let newData = Object.assign({}, shopData, {availableFood: result});
+                    //and render the page with that data
+                    res.render("list-food-to-update.ejs", newData);
+                }
+            });
+        }
+    });
+
+    /**
+     * Form handler to render update food form.
+     * It populates the form using the data already in the database so that the user can see what they are updating.
+     * It also checks if the user that has logged in is the same as the user who had added the data. If not, it throws
+     * an error.
+     * This redirects to login page if user has not logged in and also checks to see whether the keyword is empty.
+     * It also sanitises keyword to protect from XSS Attacks.
+     */
+    app.get('/update-food', redirectLogin, [check('keyword').notEmpty()], (req, res) => {
+        let username = req.session.userId;//getting the username
+        //Checking to see that the keyword is not empty
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            res.redirect('./search-food-to-update');
+        } else {
+            //searching in the database
+            let sqlQuery = "SELECT * FROM food WHERE foodID = " + req.sanitize(req.query["keyword"]) + ""; // query database to get the exact food
+            // execute sql query
+            db.query(sqlQuery, (err, result) => {
+                if (err) {
+                    res.redirect('./');
+                }
+                //If there are no matching food found, send this to the page
+                if (result[0] === undefined) {
+                    res.send('Oops, something went wrong. Click  <a href=' + './' + '>here</a> to go back to the home page.');
+                } else if (username !== result[0].username) { //if the user trying to access this page is different from the one who added this food item, send this:
+                    res.send('The user does not match the user who added this food. Try again using the same credentials you used while adding this food. Click <a href=' + './' + '>here</a> to go back to the home page.');
+                } else { //If everything checks out:
+                    //get the available food from the db
+                    let newData = Object.assign({}, shopData, {food: result});
+                    //and render the page with that data
+                    res.render("update-food-form.ejs", newData);
+                }
+            });
+        }
+    });
+
+
+    /**
+     * Form handler to update the data selected in the database
+     * This form handler updates the data in the database with the new data entered by the user.
+     * This redirects to login page if user has not logged in and also checks to see whether the keyword is empty.
+     * It also sanitises keyword to protect from XSS Attacks.
+     */
+    app.post('/food-update', redirectLogin, [check('keyword').notEmpty()], (req, res) => {
+        //check if there are no errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            //if there are errors, redirect to search page
+            res.redirect('./search-food-to-update');
+        } else {
+            //SQL Query to update
+            let sqlQuery = "UPDATE food SET name = ?, value = ?, unit = ?, carbs = ?, fat = ?, protein = ?, salt = ?, sugar = ? WHERE foodID = " + req.query["keyword"] + "";
+            //Array of updated fields
+            let updatedFood = [req.sanitize(req.body.name), req.sanitize(req.body.price), req.sanitize(req.body.unit),
+                req.sanitize(req.body.carbs), req.sanitize(req.body.fat), req.sanitize(req.body.protein), req.sanitize(req.body.salt),
+                req.sanitize(req.body.sugar)];
+
+            db.query(sqlQuery, updatedFood, (err, result) => {
+                if (err) {
+                    return console.error(err.message);
+                }
+                //getting the data to render food added page
+                let newData = Object.assign({}, shopData, {foodAdded: updatedFood});
+                res.render("food-added.ejs", newData);
+            });
+        }
+    });
+
+    /**
+     * Form handler to delete the data selected in the database
+     * The form handler deleted the data in the database selected by the user.
+     * This redirects to login page if user has not logged in and also checks to see whether the keyword is empty.
+     * It also sanitises keyword to protect from XSS Attacks.
+     * */
+    app.post('/delete-food', redirectLogin, [check('keyword').notEmpty()], (req, res) => {
+        //check if there are no errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            //if there are errors, redirect to this page
+            res.redirect('./search-food-to-update');
+        } else {
+            //SQL Query to delete a specific food
+            let sqlQuery = "DELETE FROM food  WHERE foodID = " + req.sanitize(req.query["keyword"]) + "";
+            db.query(sqlQuery, (err, result) => {
+                if (err) {
+                    return console.error(err.message);
+                }
+                //Send this to the user's page upon successful deletion
+                res.send('This food item has been successfully deleted. Click <a href=' + './' + '>here</a> to go back to the home page.');
+            });
+        }
+    });
+
+    //Page handler to show all food in our database
     app.get('/list-food', (req, res) => {
         let sqlQuery = "SELECT * FROM food"; // query database to get all the food
         // execute sql query
@@ -171,272 +322,124 @@ module.exports = (app, shopData) => {
                 res.redirect('./');
             }
             //getting the data from the db and rendering the page with that
-            let newData = Object.assign({}, shopData, {availableFood:result});
-            res.render("list-food.ejs", newData)
+            let newData = Object.assign({}, shopData, {availableFood: result});
+            res.render("list-food.ejs", newData);
         });
     });
 
+    //Get API
     app.get('/api', (req, res) => {
         // Query database to get all the food items
         let sqlQuery = "SELECT * FROM food";
-        if(req.query["keyword"]) {
-            // Query database to get specific food
+        if (req.query["keyword"]) {
+            // Query database to get specific food if keyword present
             sqlQuery = "SELECT * FROM food WHERE name LIKE '%" + req.sanitize(req.query["keyword"]) + "%'";
         }
         // Execute the sql query
         db.query(sqlQuery, (err, result) => {
             if (err) {
                 res.redirect('./');
-            }
-            if (result[0] === undefined) {
-                res.send('No food found matching the search criteria. Click on <a href='+'./'+'>Home</a> to go back to the homepage.');
+            } else if (result[0] === undefined) {
+                //If there is no result, send this to the user
+                res.send('No food found matching the search criteria. Click on <a href=' + './' + '>Home</a> to go back to the homepage.');
             } else {
                 // Return results as a JSON object
                 res.json(result);
             }
         });
-    })
+    });
 
-    //Update food Reqs:
-    // SQL Query: UPDATE food SET name = ?, carbs = ? etc WHERE food ID = x;
+    //Get specific food by API
+    app.get('/api/:foodID', (req, res) =>  {
+        //SQLQuery to delete the food item from the database
+        let sqlQuery = "SELECT * FROM food WHERE foodID = " + req.sanitize(req.params.foodID) + "";
+        db.query(sqlQuery, (err, result) => {
+            if (err) {
+                return console.error(err.message);
+            }
+            //If foodID has not been found
+            if(result[0] === undefined) {
+                //send this
+                res.send('This food ID does not exist.');
+            } else {
+                //Send this to the user's page if foodID has been found
+                res.json(result);
+            }
+        });
+    });
 
+    //API implementation of Delete
+    app.delete('/api/:foodID', (req, res) => {
+        //SQLQuery to delete the food item from the database
+        let sqlQuery = "DELETE FROM food  WHERE foodID = " + req.sanitize(req.params.foodID) + "";
+        db.query(sqlQuery, (err, result) => {
+            if (err) {
+                return console.error(err.message);
+            }
+            //If result has affected at least one row,
+            if(result.affectedRows !== 0) {
+                //Send this to the user's page upon successful deletion
+                res.send('This food item has been successfully deleted.');
+            } else {
+                //If nothing has been deleted send this
+                res.send('This food ID does not exist.');
+            }
+        });
+    });
 
+    //API Implementation to post a new food
+    app.post('/api', (req, res) => {
+        //the sql query to add the new food
+        let sqlQuery = "INSERT INTO food(username, name, value, unit, carbs, fat, protein, salt, sugar) VALUES (?,?,?,?,?,?,?,?,?)";
+        let newFood = [req.sanitize(req.body.username), req.sanitize(req.body.name), req.sanitize(req.body.value), req.sanitize(req.body.unit),
+            req.sanitize(req.body.carbs), req.sanitize(req.body.fat), req.sanitize(req.body.protein), req.sanitize(req.body.salt),
+            req.sanitize(req.body.sugar)];
 
-    // //Delete User page handler
-    // app.get('/deleteUser', redirectLogin, (req, res) => {
-    //     res.render('deleteUser.ejs', shopData);
-    // });
-    // //Delete account handler
-    // app.post('/deleteAccount', [check('username').notEmpty()], (req, res) => {
-    //     //This checks if the input for the account which is to be deleted is not empty
-    //     const errors = validationResult(req);
-    //     if(!errors.isEmpty()) {
-    //         res.redirect('./deleteUser');
-    //     } else {
-    //         //Gets the username from the form
-    //         const username = req.sanitize(req.body.username);
-    //         //SQL Query to delete the user from the db
-    //         let sqlQuery = "DELETE FROM userDetails WHERE username='" + username + "'";
-    //
-    //         //Executing the query
-    //         db.query(sqlQuery, (err, result) => {
-    //             if (err) {
-    //                 return console.log("Error on the deleteUser path: ", err);
-    //             }
-    //             //If the user didn't exist in the db, send a different message to the user
-    //             if (result.affectedRows === 0) {
-    //                 res.send("The user doesn't exist. Try again");
-    //             } else {
-    //                 res.send('The User '+ req.sanitize(req.body.username)+' has been deleted. Click on <a href='+'./'+'>Home</a> to go back to the homepage');
-    //             }
-    //         });
-    //     }
-    // });
-    // //the about page handler
-    // app.get('/about',(req,res) => {
-    //     res.render('about.ejs', shopData);
-    // });
-    // //the search page handler
-    // app.get('/search', redirectLogin, (req,res) => {
-    //     res.render("search.ejs", shopData);
-    // });
-    // //the search result form handler
-    // app.get('/search-result', [check('keyword').notEmpty()], (req, res) => {
-    //     const errors = validationResult(req);
-    //     if(!errors.isEmpty()) {
-    //         res.redirect('./search');
-    //     } else {
-    //         //searching in the database
-    //         let sqlQuery = "SELECT * FROM books WHERE name LIKE '%" + req.query["keyword"] + "%'"; // query database to get all the books
-    //         // execute sql query
-    //         db.query(sqlQuery, (err, result) => {
-    //             if (err) {
-    //                 res.redirect('./');
-    //             }
-    //             //get the available books from the db
-    //             let newData = Object.assign({}, shopData, {availableBooks:result});
-    //             //and render the page with that data
-    //             res.render("list.ejs", newData);
-    //         });
-    //     }
-    // });
-    // //register page handler
-    // app.get('/register', (req,res) => {
-    //     res.render('register.ejs', shopData);
-    // });
-    // //registered form page handler
-    // app.post('/registered', [check('email').isEmail(), check('password').isLength({min: 8})], (req,res) => {
-    //     //checking if the email is an email and the password has a length of at least 8 characters
-    //     const errors = validationResult(req);
-    //     if(!errors.isEmpty()) {
-    //         res.redirect('./register');
-    //     } else {
-    //         //The cost factor controls how much time is needed to calculate a single bcrypt hash
-    //         const saltRounds = 10;
-    //         //Sanitising the password the user enters
-    //         const plainPassword = req.sanitize(req.body.password);
-    //         //hashing the password
-    //         bcrypt.hash(plainPassword, saltRounds, function(err, hashedPassword) {
-    //             // Storing hashed password in the database.
-    //             let sqlQuery = "INSERT INTO userDetails (first, last, email, username, password) VALUES (?,?,?,?,?)";
-    //
-    //             // execute sql query
-    //             let newUser = [req.sanitize(req.body.first), req.sanitize(req.body.last), req.sanitize(req.body.email),
-    //                 req.sanitize(req.body.username), hashedPassword, req.sanitize(plainPassword)];
-    //
-    //             //adding the user in our database
-    //             db.query(sqlQuery, newUser, (err, result) => {
-    //                 if (err) {
-    //                     return console.error(err.message);
-    //                 }
-    //                 //rendering this to the registered page
-    //                 let newData = Object.assign({}, shopData, {registeredUser:newUser});
-    //                 res.render("registered.ejs", newData);
-    //             });
-    //         });
-    //     }
-    // });
-    // //the list page handler
-    // app.get('/list', redirectLogin, (req, res) => {
-    //     let sqlQuery = "SELECT * FROM books"; // query database to get all the books
-    //     // execute sql query
-    //     db.query(sqlQuery, (err, result) => {
-    //         if (err) {
-    //             res.redirect('./');
-    //         }
-    //         //getting the data from the db and rendering the page with that
-    //         let newData = Object.assign({}, shopData, {availableBooks:result});
-    //         res.render("list.ejs", newData)
-    //      });
-    // });
-    // //listUsers page handler
-    // app.get('/listUsers', redirectLogin, (req, res) => {
-    //     //get the related columns from the db
-    //     let sqlQuery = "SELECT first, last, email, username FROM userDetails";
-    //     //querying the db
-    //     db.query(sqlQuery, (err, result) => {
-    //         if(err) {
-    //             return console.log("Error on listUsers route ", err.message);
-    //         }
-    //         //getting the users from the db and rendering them
-    //         let newData = Object.assign({}, shopData, {availableUsers:result});
-    //         res.render("listUsers.ejs", newData)
-    //     })
-    // });
-    //
-    // //addBooks page handler
-    // app.get('/addbook', redirectLogin, (req, res) => {
-    //     //rendering addbook.ejs
-    //     res.render('addbook.ejs', shopData);
-    // });
-    //
-    // //bookAdded page handler
-    // app.post('/bookadded', [check('name').isAlphanumeric(), check('price').isNumeric()], (req,res) => {
-    //     //Checking if the name of book is alphanumeric and the price is numeric
-    //     const errors = validationResult(req);
-    //     if(!errors.isEmpty()) {
-    //         res.redirect('./addbook');
-    //     } else {
-    //         // saving data in database
-    //         let sqlQuery = "INSERT INTO books (name, price) VALUES (?,?)"
-    //         // execute sql query
-    //         let newRecord = [req.sanitize(req.body.name), req.sanitize(req.body.price)];
-    //         db.query(sqlQuery, newRecord, (err, result) => {
-    //             if (err) {
-    //                 return console.error(err.message);
-    //             } else
-    //                 res.send('This book is added to database, name: ' + req.sanitize(req.body.name) +
-    //                     ' price ' + req.sanitize(req.body.price) + '. Click on <a href='+'./'+'>Home</a> to go back to the homepage');
-    //         });
-    //     }
-    // });
-    //
-    // //bargainBooks page handler
-    // app.get('/bargainbooks', redirectLogin, (req, res) => {
-    //     //SQL Query to get the bargain books(i.e. books whose price is lesser than 20)
-    //     let sqlQuery = "SELECT * FROM books WHERE price < 20";
-    //     //Querying the db
-    //     db.query(sqlQuery, (err, result) => {
-    //       if (err) {
-    //          res.redirect('./');
-    //       }
-    //       //Getting the books and rendering them
-    //       let newData = Object.assign({}, shopData, {availableBooks:result});
-    //       res.render("bargains.ejs", newData)
-    //     });
-    // });
-    //
-    //
-    // //Handler to show the weather form
-    // app.get('/weather', (req, res) => {
-    //     res.render('weather.ejs', shopData);
-    // });
-    //
-    // //Weather result showing handler
-    // app.get('/weather-result', (req, res) => {
-    //     const request = require('request');
-    //     let apiKey = "fa4f97247d32a457d8f3c40e62d383a7";
-    //     let city = req.sanitize(req.query["keyword"]);
-    //     let url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
-    //
-    //     request(url, (err, response, body) => {
-    //         if(err) {
-    //             console.log('error:', error);
-    //         } else {
-    //             const weather = JSON.parse(body);
-    //             if (weather!==undefined && weather.main!==undefined) {
-    //                 let newData = Object.assign({}, shopData, {theWeather:weather});
-    //                 res.render('weatherResult.ejs', newData);
-    //             } else {
-    //                 res.redirect('/weather');
-    //             }
-    //         }
-    //     });
-    // });
-    //
-    // //API route handler
-    // app.get('/api', (req, res) => {
-    //     // Query database to get all the books
-    //     let sqlQuery = "SELECT * FROM books";
-    //     if(req.query["keyword"]) {
-    //         // Query database to get specific books
-    //         sqlQuery = "SELECT * FROM books WHERE name LIKE '%" + req.sanitize(req.query["keyword"]) + "%'";
-    //     }
-    //     // Execute the sql query
-    //     db.query(sqlQuery, (err, result) => {
-    //         if (err) {
-    //             res.redirect('./');
-    //         }
-    //         if (result[0] === undefined) {
-    //             res.send('No books found matching the search criteria. Click on <a href='+'./'+'>Home</a> to go back to the homepage.');
-    //         } else {
-    //             // Return results as a JSON object
-    //             res.json(result);
-    //         }
-    //     });
-    // });
-    //
-    // //Rendering TV Shows file
-    // app.get('/tvshows', (req, res) => {
-    //     res.render('tvshows.ejs', shopData);
-    // });
-    //
-    // //Searching for TV Shows
-    // app.get('/show-search', (req, res) => {
-    //     let query = req.sanitize(req.query["keyword"]);
-    //     let url = `https://api.tvmaze.com/search/shows?q=${query}`;
-    //     request(url, (err, response, body) => {
-    //         if(err) {
-    //             console.log('error:', error);
-    //         } else {
-    //             const data = JSON.parse(body);
-    //             if (data!==undefined && data[0]!==undefined) {
-    //                 let newData = Object.assign({}, shopData, {theData:data});
-    //                 res.render('tvshows-result.ejs', newData);
-    //             } else {
-    //                 res.redirect('/tvshows');
-    //             }
-    //         }
-    //     });
-    // });
+        //Checking if all values are entered
+        for(let i=0; i<newFood.length; i++) {
+            if(newFood[i]===undefined) {
+                //if any value is undefined, we return this error
+                return res.send('You are missing a value. Please check the values and try again.')
+            }
+        }
+
+        //adding the food in our database
+        db.query(sqlQuery, newFood, (err, result) => {
+            if (err) {
+                return console.error(err.message);
+            } else if(result.affectedRows !== 0) { //If the food has been added, we render this page
+                let newData = Object.assign({}, shopData, {foodAdded: newFood});
+                res.render("food-added.ejs", newData);
+            } else {
+                //TODO: Say what error it is
+                return res.send('Error encountered while trying to add the food. Try again!');
+            }
+        });
+    });
+
+    //API Implementation to update a food
+    app.patch('/api/:foodID', (req, res) => {
+        let sqlQuery = "UPDATE food SET name=?, value=?, unit=?, carbs=?, fat=?, protein=?, salt=?, sugar=? where foodID=?";
+        let record = [req.body.name, req.body.value, req.body.unit, req.body.carbs, req.body.fat, req.body.protein, req.body.salt, req.body.sugar, req.params.foodID];
+
+        //Checking if all values are entered
+        for(let i=0; i<record.length; i++) {
+            if(record[i]===undefined) {
+                //if any value is undefined, we return this error
+                return res.send('You are missing a value. Please check the values and try again.')
+            }
+        }
+
+        db.query(sqlQuery, record, (err, result) => {
+            if (err) {
+                console.log(err.message);
+                res.redirect('./');
+            } else if (result.affectedRows !== 0) {
+                return res.send('The food has been successfully updated!');
+            } else {
+                let string = 'Error encountered while trying to update the food. Try again!' + err;
+                return res.send(string);
+            }
+        });
+    });
 }

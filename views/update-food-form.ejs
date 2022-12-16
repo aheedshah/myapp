@@ -1,0 +1,27 @@
+<!--This is the page which lets users add a food item to the Database-->
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Update a food item to <a href="/"><%=shopName%></a></title>
+        <!-- Linking my CSS -->
+        <link rel="stylesheet"  type="text/css" href="main.css" />
+    </head>
+    <body>
+        <h1><a href="/"><%=shopName%></a>: Update Food Item</h1>
+        <!-- The form to add a new food, and it's everything with it -->
+        <form method="POST" action="/food-update?keyword=<%=food[0].foodID%>">
+            <label for="name">Name:</label><input id="name" type="text" name="name" value="<%=food[0].name%>" required /><br><br>
+            <label for="price">Typical Values per:</label><input id="price" type="number" name="price" step="any" value="<%=food[0].value%>" required /><br><br>
+            <label for="unit">Unit of the typical value:</label><input id="unit" type="text" name="unit" step="any" value="<%=food[0].unit%>" placeholder="gram, litre, tablespoon, etc" required /><br><br>
+            <label for="carbs">Carbs:</label><input id="carbs" type="number" name="carbs" step="any" value="<%=food[0].carbs%>" required /><br><br>
+            <label for="fat">Fat:</label><input id="fat" type="number" name="fat" step="any" value="<%=food[0].fat%>" required /><br><br>
+            <label for="protein">Protein:</label><input id="protein" type="number" step="any" value="<%=food[0].protein%>" name="protein" required /><br><br>
+            <label for="salt">Salt:</label><input id="salt" type="number" step="any" name="salt" value="<%=food[0].salt%>" required /><br><br>
+            <label for="sugar">Sugar:</label><input id="sugar" type="number" step="any" name="sugar" value="<%=food[0].sugar%>" required /><br><br>
+            <input type="submit" value="Update Food Item" />
+        </form>
+        <form method="post" action="/delete-food?keyword=<%=food[0].foodID%>" onsubmit="return confirm('Are you sure you want to delete this?');">
+            <input type="submit" value="Delete Food Item">
+        </form>
+    </body>
+</html>

@@ -10,6 +10,7 @@ const expressSanitizer = require('express-sanitizer');
 
 // Create the express application object
 const app = express()
+app.use(express.json());
 const port = 8000
 app.use(bodyParser.urlencoded({ extended: true }));
 
